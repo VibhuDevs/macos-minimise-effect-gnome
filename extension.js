@@ -1,4 +1,3 @@
-
 /*
  * Compiz-alike-magic-lamp-effect for GNOME Shell
  *
@@ -191,7 +190,7 @@ class AbstractCommonMagicLampEffect extends Clutter.DeformEffect {
 
         this.settingsData = params.settingsData;
 
-        this.EPSILON = 40;
+        this.EPSILON = 20;
 
         this.isMinimizeEffect = false;
         this.newFrameEvent = null;
@@ -206,7 +205,7 @@ class AbstractCommonMagicLampEffect extends Clutter.DeformEffect {
         this.icon = params.icon;
         
         this.progress = 0;
-        this.split = 0.3;
+        this.split = 0.15;
         this.k = 0;
         this.j = 0;
         this.expandWidth = 0;
@@ -223,11 +222,11 @@ class AbstractCommonMagicLampEffect extends Clutter.DeformEffect {
         this.effectY = 0;
         this.iconPosition = null;
 
-        this.toTheBorder = true;   // true
-        this.maxIconSize = null;    // 48
-        this.alignIcon = 'center';  // 'left-top'
+        this.toTheBorder = true;
+        this.maxIconSize = null;
+        this.alignIcon = 'center';
 
-        this.EFFECT = this.settingsData.EFFECT.get(); //'default' - 'sine'
+        this.EFFECT = this.settingsData.EFFECT.get();
         this.DURATION = this.settingsData.DURATION.get();
         this.X_TILES = this.settingsData.X_TILES.get();
         this.Y_TILES = this.settingsData.Y_TILES.get();
@@ -258,20 +257,19 @@ class AbstractCommonMagicLampEffect extends Clutter.DeformEffect {
             this.icon.y = this.monitor.height + this.monitor.y;
         }
 
-        Main.layoutManager.monitors.forEach((monitor, monitorIndex)  => {
+        Main.layoutManager.monitors.forEach((monitor, monitorIndex) => {
             let scale = 1;
             if (global.display && global.display.get_monitor_scale) {
                 scale = global.display.get_monitor_scale(monitorIndex);
             }
 
-            if (this.icon.x >= monitor.x && this.icon.x <= monitor.x + monitor.width * scale && this.icon.y >= monitor.y && this.icon.y <= monitor.y + monitor.height * scale)  {
+            if (this.icon.x >= monitor.x && this.icon.x <= monitor.x + monitor.width * scale && this.icon.y >= monitor.y && this.icon.y <= monitor.y + monitor.height * scale) {
                 this.iconMonitor = monitor;
             }
         });
+
         if (this.iconMonitor.x == 0 && this.iconMonitor.y == 0 && this.iconMonitor.width == 0 && this.iconMonitor.height == 0) {
             this.iconMonitor = this.monitor;
-            // this.icon.x = this.monitor.x + this.monitor.width / 2;
-            // this.icon.y = this.monitor.height + this.monitor.y;
         }
 
         [this.icon.x, this.icon.y, this.icon.width, this.icon.height] = [this.icon.x - this.monitor.x, this.icon.y - this.monitor.y, this.icon.width, this.icon.height];
@@ -279,7 +277,7 @@ class AbstractCommonMagicLampEffect extends Clutter.DeformEffect {
         if (this.icon.y + this.icon.height >= this.monitor.height - this.EPSILON) {
             this.iconPosition = St.Side.BOTTOM;
             if (this.toTheBorder) {
-                this.icon.y = this.iconMonitor.y + this.iconMonitor.height - this.monitor.y
+                this.icon.y = this.iconMonitor.y + this.iconMonitor.height - this.monitor.y;
                 this.icon.height = 0;
             }
         } else if (this.icon.x <= this.EPSILON) {
@@ -304,7 +302,7 @@ class AbstractCommonMagicLampEffect extends Clutter.DeformEffect {
 
         this.set_n_tiles(this.X_TILES, this.Y_TILES);
         
-        this.timerId = new Clutter.Timeline({ actor: this.actor, duration: this.DURATION + (this.monitor.width * this.monitor.height) / (this.window.width * this.window.height) });
+        this.timerId = new Clutter.Timeline({actor: this.actor, duration: this.DURATION});
         this.newFrameEvent = this.timerId.connect('new-frame', this.on_tick_elapsed.bind(this));
         this.completedEvent = this.timerId.connect('completed', this.destroy.bind(this));
         this.timerId.start();
@@ -353,7 +351,7 @@ class AbstractCommonMagicLampEffect extends Clutter.DeformEffect {
                 if (this.EFFECT === 'sine') {
                     this.effectY = Math.sin(this.x / this.width * Math.PI * 4) * this.window.height / 14 * this.k;
                 } else {
-                    this.effectY = Math.sin((0.5 - (this.width - this.x) / this.width) * 2 * Math.PI) * (this.window.y + this.window.height * v.ty - (this.icon.y + this.icon.height * v.ty)) / 7 * this.k;
+                    this.effectY = 0;
                 }
             } else if (this.iconPosition == St.Side.TOP) {
                 this.height = this.window.height - this.icon.height + this.window.y * this.k;
@@ -368,7 +366,7 @@ class AbstractCommonMagicLampEffect extends Clutter.DeformEffect {
                 if (this.EFFECT === 'sine') {
                     this.effectX = Math.sin(this.y / this.height * Math.PI * 4) * this.window.width / 14 * this.k;
                 } else {
-                    this.effectX = Math.sin((0.5 - (this.height - this.y) / this.height) * 2 * Math.PI) * (this.window.x + this.window.width * v.tx - (this.icon.x + this.icon.width * v.tx)) / 7 * this.k;
+                    this.effectX = 0;
                 }
             } else if (this.iconPosition == St.Side.RIGHT) {
                 this.expandWidth = (this.iconMonitor.width - this.icon.width - this.window.x - this.window.width);
@@ -386,26 +384,45 @@ class AbstractCommonMagicLampEffect extends Clutter.DeformEffect {
                 if (this.EFFECT === 'sine') {
                     this.effectY = Math.sin((this.width - this.x) / this.fullWidth * Math.PI * 4) * this.window.height / 14 * this.k;
                 } else {
-                    this.effectY = Math.sin(((this.width - this.x) / this.fullWidth) * 2 * Math.PI + Math.PI) * (this.window.y + this.window.height * v.ty - (this.icon.y + this.icon.height * v.ty)) / 7 * this.k;
+                    this.effectY = 0;
                 }
             } else if (this.iconPosition == St.Side.BOTTOM) {
                 this.expandHeight = (this.iconMonitor.height - this.icon.height - this.window.y - this.window.height);
-                this.fullHeight = (this.iconMonitor.height - this.icon.height - this.window.y) - this.expandHeight * (1 - this.k);
+
+                this.fullHeight =
+                    (this.iconMonitor.height - this.icon.height - this.window.y) -
+                    this.expandHeight * (1 - this.k);
+
                 this.height = this.fullHeight - this.j * this.fullHeight;
-                
+
+                // stronger macOS funnel pinch
+                let pinch = Math.pow(v.ty, 1.8);
+
                 this.y = v.ty * this.height;
-                this.x = v.tx * (this.icon.width) +
-                        v.tx * (this.window.width - this.icon.width) * (1 - this.j) * (1 - v.ty) +
-                        v.tx * (this.window.width - this.icon.width) * (1 - this.k) * (v.ty);
 
-                this.offsetX = (this.icon.x - this.window.x) * (this.y / this.fullHeight) * this.k + (this.icon.x - this.window.x) * this.j;
-                this.offsetY = this.iconMonitor.height - this.icon.height - this.window.y - this.height - this.expandHeight * (1 - this.k);
+                this.x =
+                    v.tx * this.icon.width +
+                    v.tx * (this.window.width - this.icon.width) *
+                    (1 - this.j) *
+                    (1 - pinch) +
+                    v.tx * (this.window.width - this.icon.width) *
+                    (1 - this.k) * pinch;
 
-                if (this.EFFECT === 'sine') {
-                    this.effectX = Math.sin((this.height - this.y) / this.fullHeight * Math.PI * 4) * this.window.width / 14 * this.k;
-                } else {
-                    this.effectX = Math.sin(((this.height - this.y) / this.fullHeight) * 2 * Math.PI + Math.PI) * (this.window.x + this.window.width * v.tx - (this.icon.x + this.icon.width * v.tx)) / 7 * this.k;
-                }
+                this.offsetX =
+                    (this.icon.x - this.window.x) *
+                    (this.y / this.fullHeight) *
+                    this.k +
+                    (this.icon.x - this.window.x) * this.j;
+
+                this.offsetY =
+                    this.iconMonitor.height -
+                    this.icon.height -
+                    this.window.y -
+                    this.height -
+                    this.expandHeight * (1 - this.k);
+
+                // no wobble — clean macOS style
+                this.effectX = 0;
             }
             
             v.x = (this.x + this.offsetX + this.effectX) * propX;
@@ -425,7 +442,6 @@ class MagicLampMinimizeEffect extends AbstractCommonMagicLampEffect {
         this.k = 0;
         this.j = 0;
         this.isMinimizeEffect = true;
-    
     }
 
     destroy_actor(actor) {
@@ -437,9 +453,18 @@ class MagicLampMinimizeEffect extends AbstractCommonMagicLampEffect {
             this.destroy();
         }
 
+        // cubic easing closer to macOS
         this.progress = timer.get_progress();
-        this.k = this.progress <= this.split ? this.progress * (1 / 1 / this.split) : 1;
-        this.j = this.progress > this.split ? (this.progress - this.split) * (1 / 1 / (1 - this.split)) : 0;
+
+        let eased = 1 - Math.pow(1 - this.progress, 3);
+
+        this.k = eased <= this.split
+            ? eased / this.split
+            : 1;
+
+        this.j = eased > this.split
+            ? (eased - this.split) / (1 - this.split)
+            : 0;
 
         this.actor.get_parent().queue_redraw();
         this.invalidate();
@@ -470,11 +495,23 @@ class MagicLampUnminimizeEffect extends AbstractCommonMagicLampEffect {
     on_tick_elapsed(timer, msecs) {
         if (Main.overview.visible) {
             this.destroy();
-        }   
+        }
 
         this.progress = timer.get_progress();
-        this.k = 1 - (this.progress > (1 - this.split) ? (this.progress - (1 - this.split)) * (1 / 1 / (1 - (1 - this.split))) : 0);
-        this.j = 1 - (this.progress <= (1 - this.split) ? this.progress * (1 / 1 / (1 - this.split)) : 1);
+
+        let eased = 1 - Math.pow(1 - this.progress, 2.5); // ease-out, snappy expand
+
+        this.k = 1 - (
+            eased > (1 - this.split)
+                ? (eased - (1 - this.split)) / this.split
+                : 0
+        );
+
+        this.j = 1 - (
+            eased <= (1 - this.split)
+                ? eased / (1 - this.split)
+                : 1
+        );
 
         this.actor.get_parent().queue_redraw();
         this.invalidate();
